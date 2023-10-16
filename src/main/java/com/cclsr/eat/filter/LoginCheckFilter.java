@@ -1,6 +1,7 @@
 package com.cclsr.eat.filter;
 
 import com.alibaba.fastjson.JSON;
+import com.cclsr.eat.common.BaseContext;
 import com.cclsr.eat.common.R;
 import com.cclsr.eat.entity.Employee;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,12 @@ public class LoginCheckFilter implements Filter {
                 return;
             }
         }
+        Long empid = (Long)request.getSession().getAttribute("employee");
+        BaseContext.setCurrentId(empid);
+
+        long id = Thread.currentThread().getId();
+        log.info("当前线程id：{}", id);
+
         filterChain.doFilter(request, response);
     }
 

@@ -1,14 +1,14 @@
 package com.cclsr.eat.entity.dto;
 
-import com.cclsr.eat.entity.Setmeal;
-import com.cclsr.eat.entity.SetmealDish;
+import com.cclsr.eat.entity.SetMeal;
+import com.cclsr.eat.entity.SetMealDish;
 import lombok.Data;
 import java.util.List;
 
 @Data
-public class SetmealDto extends Setmeal {
+public class SetmealDto extends SetMeal {
 
-    private List<SetmealDish> setmealDishes;
+    private List<SetMealDish> setMealDishes;
 
     private String categoryName;
 }
