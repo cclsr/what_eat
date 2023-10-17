@@ -31,7 +31,8 @@ public class LoginCheckFilter implements Filter {
                 "/employee/login",
                 "/employee/logout",
                 "/backend/**",
-                "/front/**"
+                "/front/**",
+                "/common/upload"
         };
         boolean check = check(urls, requestURI);
         log.info("校验状态:{}", check);
