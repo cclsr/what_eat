@@ -32,21 +32,28 @@ public class LoginCheckFilter implements Filter {
                 "/employee/logout",
                 "/backend/**",
                 "/front/**",
-                "/common/upload"
+                "/common/upload",
+                "/user/sendMsg",
+                "/user/login"
         };
         boolean check = check(urls, requestURI);
         log.info("校验状态:{}", check);
         // 未登录
         if (!check) {
             log.info("session信息：{}", request.getSession().getAttribute("employee"));
-            if (request.getSession().getAttribute("employee") == null) {
+            if (request.getSession().getAttribute("employee") == null && request.getSession().getAttribute("user") == null) {
                 // 未登录则返回未登录结果，通过输出流方式向客户端相应数据
                 response.getWriter().write(JSON.toJSONString(R.error("NOTLOGIN")));
                 return;
             }
         }
-        Long empid = (Long)request.getSession().getAttribute("employee");
-        BaseContext.setCurrentId(empid);
+        if (request.getSession().getAttribute("employee") != null){
+            Long empid = (Long)request.getSession().getAttribute("employee");
+            BaseContext.setCurrentId(empid);
+        }else if(request.getSession().getAttribute("user") != null){
+            Long userid = (Long)request.getSession().getAttribute("user");
+            BaseContext.setCurrentId(userid);
+        }
 
         long id = Thread.currentThread().getId();
         log.info("当前线程id：{}", id);

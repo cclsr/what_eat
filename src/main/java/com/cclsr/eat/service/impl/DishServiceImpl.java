@@ -2,6 +2,7 @@ package com.cclsr.eat.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cclsr.eat.common.CustomException;
 import com.cclsr.eat.entity.Dish;
 import com.cclsr.eat.entity.DishFlavor;
 import com.cclsr.eat.entity.dto.DishDto;
@@ -76,5 +77,26 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             return item;
         }).collect(Collectors.toList());
         dishFlavorService.saveBatch(dishFlavors);
+    }
+
+    @Override
+    @Transactional
+    public void removeWithFlavor(List<Long> ids) {
+        // 判断是否都为停售状态
+        LambdaQueryWrapper<Dish> dishLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        dishLambdaQueryWrapper.in(Dish::getId, ids);
+        dishLambdaQueryWrapper.eq(Dish::getStatus, 1);
+        int count = this.count(dishLambdaQueryWrapper);
+        if (count > 0){
+            throw new CustomException("菜品启售中，不能删除。。。");
+        }
+
+        // 删除菜品
+        super.removeByIds(ids);
+
+        // 删除菜品关联的口味
+        LambdaQueryWrapper<DishFlavor> flavorLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        flavorLambdaQueryWrapper.in(DishFlavor::getDishId, ids);
+        dishFlavorService.remove(flavorLambdaQueryWrapper);
     }
 }

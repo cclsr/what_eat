@@ -88,33 +88,39 @@ public class DishController {
 
     /**
      * 根据id查询菜品和对应的口味信息
+     *
      * @param id
      * @return
      */
     @GetMapping("/{id}")
-    public R<DishDto> get(@PathVariable Long id){
+    public R<DishDto> get(@PathVariable Long id) {
         DishDto dishDto = dishService.getByIdWithFlavor(id);
         return R.success(dishDto);
     }
 
     @PutMapping
-    public R<String> update(@RequestBody DishDto dishDto){
+    public R<String> update(@RequestBody DishDto dishDto) {
         dishService.updateWithFlavor(dishDto);
         return R.success("菜品更新成功");
     }
 
+//    @DeleteMapping
+//    public R<String> delete(String ids) {
+//        List<String> list = new ArrayList<>(Arrays.asList(ids.split(",")));
+//        dishService.removeByIds(list);
+//        LambdaQueryWrapper<DishFlavor> queryWrapper = new LambdaQueryWrapper<>();
+//        queryWrapper.in(DishFlavor::getDishId, list);
+//        dishFlavorService.remove(queryWrapper);
+//        return R.success("删除成功");
+//    }
     @DeleteMapping
-    public R<String> delete(String ids){
-        List<String> list = new ArrayList<>(Arrays.asList(ids.split(",")));
-        dishService.removeByIds(list);
-        LambdaQueryWrapper<DishFlavor> queryWrapper = new LambdaQueryWrapper();
-        queryWrapper.in(DishFlavor::getDishId, list);
-        dishFlavorService.remove(queryWrapper);
+    public R<String> delete(@RequestParam List<Long> ids){
+        dishService.removeWithFlavor(ids);
         return R.success("删除成功");
     }
 
     @PostMapping("/status/{status}")
-    public R<String> status(String ids,@PathVariable Integer status){
+    public R<String> status(String ids, @PathVariable Integer status) {
         List<String> list = new ArrayList<>(Arrays.asList(ids.split(",")));
         Dish dish = new Dish();
         dish.setStatus(status);
@@ -122,5 +128,22 @@ public class DishController {
         queryWrapper.in(Dish::getId, list);
         dishService.update(dish, queryWrapper);
         return R.success("菜品更新成功");
+    }
+
+    /**
+     * 根据条件查询菜品列表
+     *
+     * @param dish
+     * @return
+     */
+    @GetMapping("/list")
+    public R<List<Dish>> list(Dish dish) {
+        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
+        queryWrapper.eq(Dish::getStatus, 1);
+        queryWrapper.like(dish.getName() != null, Dish::getName, dish.getName());
+        queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
+        List<Dish> list = dishService.list(queryWrapper);
+        return R.success(list);
     }
 }

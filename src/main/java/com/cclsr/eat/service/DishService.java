@@ -5,6 +5,8 @@ import com.cclsr.eat.entity.Dish;
 import com.cclsr.eat.entity.dto.DishDto;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public interface DishService extends IService<Dish> {
     // 新增菜品，同时插入菜品对应的口味数据，需要操作两张表 dish dish_flavor
@@ -14,4 +16,6 @@ public interface DishService extends IService<Dish> {
     public DishDto getByIdWithFlavor(Long id);
 
     public void updateWithFlavor(DishDto dishDto);
+
+    public void removeWithFlavor(List<Long> ids);
 }
