@@ -104,7 +104,7 @@ public class DishController {
         return R.success("菜品更新成功");
     }
 
-//    @DeleteMapping
+    //    @DeleteMapping
 //    public R<String> delete(String ids) {
 //        List<String> list = new ArrayList<>(Arrays.asList(ids.split(",")));
 //        dishService.removeByIds(list);
@@ -114,7 +114,7 @@ public class DishController {
 //        return R.success("删除成功");
 //    }
     @DeleteMapping
-    public R<String> delete(@RequestParam List<Long> ids){
+    public R<String> delete(@RequestParam List<Long> ids) {
         dishService.removeWithFlavor(ids);
         return R.success("删除成功");
     }
@@ -137,13 +137,23 @@ public class DishController {
      * @return
      */
     @GetMapping("/list")
-    public R<List<Dish>> list(Dish dish) {
+    public R<List<DishDto>> list(Dish dish) {
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
         queryWrapper.eq(Dish::getStatus, 1);
         queryWrapper.like(dish.getName() != null, Dish::getName, dish.getName());
         queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
         List<Dish> list = dishService.list(queryWrapper);
-        return R.success(list);
+        // 封装口味数据
+        List<DishDto> dishDtoList = list.stream().map((item) -> {
+            DishDto dishDto = new DishDto();
+            LambdaQueryWrapper<DishFlavor> flavorLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            flavorLambdaQueryWrapper.eq(DishFlavor::getDishId, item.getId());
+            List<DishFlavor> flavors = dishFlavorService.list(flavorLambdaQueryWrapper);
+            BeanUtils.copyProperties(item, dishDto);
+            dishDto.setFlavors(flavors);
+            return dishDto;
+        }).collect(Collectors.toList());
+        return R.success(dishDtoList);
     }
 }

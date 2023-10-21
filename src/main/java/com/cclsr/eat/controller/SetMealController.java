@@ -99,4 +99,19 @@ public class SetMealController {
         setMealService.update(setMeal, setMealLambdaQueryWrapper);
         return R.success("状态修改成功");
     }
+
+    /**
+     * 根据条件查询套餐
+     * @param setMeal
+     * @return
+     */
+    @GetMapping("/list")
+    public R<List<SetMeal>> list(SetMeal setMeal){
+        LambdaQueryWrapper<SetMeal> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(setMeal.getCategoryId() != null, SetMeal::getCategoryId, setMeal.getCategoryId());
+        queryWrapper.eq(setMeal.getStatus() != null, SetMeal::getStatus, setMeal.getStatus());
+        queryWrapper.orderByDesc(SetMeal::getUpdateTime);
+        List<SetMeal> list = setMealService.list(queryWrapper);
+        return R.success(list);
+    }
 }
