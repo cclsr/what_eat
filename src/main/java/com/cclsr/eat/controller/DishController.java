@@ -13,6 +13,10 @@ import com.cclsr.eat.service.DishService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,12 +39,18 @@ public class DishController {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private CacheManager cacheManager;
     /**
      * 新增菜品
      *
      * @param dishDto
      * @return
+     * cachePut 将方法返回值放入缓存
+     * value 缓存的名称，每个缓存名称下面有多个key
+     * key 缓存的key
      */
+    @CachePut(value = "dishCache", key = "#result.id")
     @PostMapping
     public R<String> save(@RequestBody DishDto dishDto) {
         log.info(dishDto.toString());
@@ -95,6 +105,7 @@ public class DishController {
      * @param id
      * @return
      */
+    @Cacheable(value = "dishCache", key = "#id", condition = "#result != null")
     @GetMapping("/{id}")
     public R<DishDto> get(@PathVariable Long id) {
         DishDto dishDto = dishService.getByIdWithFlavor(id);
@@ -123,6 +134,10 @@ public class DishController {
 //        dishFlavorService.remove(queryWrapper);
 //        return R.success("删除成功");
 //    }
+    // allEntries 删除value下的所有缓存数据
+    @CacheEvict(value = "dishCache", allEntries = true)
+//    @CacheEvict(value = "userCache", key = "#root.args[0]")
+    //@CacheEvict(value = "userCache",key = "#id")
     @DeleteMapping
     public R<String> delete(@RequestParam List<Long> ids) {
         dishService.removeWithFlavor(ids);
@@ -148,15 +163,16 @@ public class DishController {
      * @param dish
      * @return
      */
+    @Cacheable(value = "dishCache", key = "#dish.getCategoryId() + '_' + #dish.getStatus()")
     @GetMapping("/list")
     public R<List<DishDto>> list(Dish dish) {
         List<DishDto> dishDtoList = null;
-        String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
-        //从redis中获取缓存数据
-        dishDtoList = (List<DishDto>) redisTemplate.opsForValue().get(key);
-        if (dishDtoList != null) {
-            return R.success(dishDtoList);
-        }
+//        String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
+//        //从redis中获取缓存数据
+//        dishDtoList = (List<DishDto>) redisTemplate.opsForValue().get(key);
+//        if (dishDtoList != null) {
+//            return R.success(dishDtoList);
+//        }
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
         queryWrapper.eq(Dish::getStatus, 1);
@@ -175,7 +191,7 @@ public class DishController {
         }).collect(Collectors.toList());
 
         // 将数据保存到redis中
-        redisTemplate.opsForValue().set(key, dishDtoList);
+        //redisTemplate.opsForValue().set(key, dishDtoList);
         return R.success(dishDtoList);
     }
 }
